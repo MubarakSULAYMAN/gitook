@@ -197,7 +197,7 @@
   }
 
   .small-search-bar {
-    position: absolute;
+    position: fixed;
     top: 15px;
     right: 100px;
     display: block;
@@ -217,7 +217,7 @@
   }
 
   .submit-search {
-    position: absolute;
+    position: fixed;
     top: 26px;
     right: 26px;
     display: block;
@@ -573,7 +573,7 @@
   @media (max-width: 768px) {
 
   .small-search-bar {
-    position: absolute;
+    position: fixed;
     top: 15px;
     right: 90px;
     width: 250px;
@@ -581,7 +581,7 @@
   }
 
   .submit-search {
-    position: absolute;
+    position: fixed;
     top: 26px;
     right: 15px;
   }
