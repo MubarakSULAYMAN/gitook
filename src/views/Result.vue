@@ -37,7 +37,16 @@
         </div>
       </div>
 
+        <div class="result-count"> <strong> 1,234 results found </strong> / <span> showing 10 </span> </div>
+        <div class="pagination">
+          <button> Previous </button>
+          <button> First </button>
+          <span class="page-progress"> Page 1 of 987 </span>
+          <button> Last </button>
+          <button> Next </button>
+        </div>
       <div class="query-result">
+        <!-- <div> -->
         <div class="card-layers">
           <div class="card">
             <div class="img-wrap">
@@ -145,6 +154,7 @@
             </div>
           </div>
         </div>
+        <!-- </div> -->
       </div>
     </div>
   </div>
@@ -249,7 +259,7 @@
   } */
 
   .filters {
-    margin: 3rem;
+    margin: 4rem;
     display: block;
     width: 23rem;
     background-color: white;
@@ -274,6 +284,96 @@
     margin-top: 3rem;
     padding: 10px;
   }
+
+  .result-count {
+    position: fixed;
+    top: 90px;
+    right: -15px;
+    padding: 10px 20px;
+    border-radius: 20px 0 0 20px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+    color: #7272FF;
+    font-size: 12px;
+    z-index: 100;
+  }
+
+  .pagination {
+    position: fixed;
+    bottom: -2px;
+    right: 60px;
+    width: 700px;
+    padding: 5px 10px;
+    border-radius: 10px 10px 0 0;
+    background-color: #7272FF;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .2);
+    /* color: #7272FF; */
+    font-size: 14px;
+    z-index: 100;
+  }
+
+  .pagination button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    background-color: transparent;
+    border:  none;
+    outline: none;
+  }
+
+  .pagination .page-progress {
+    display: inline-block;
+    margin: 0 159px;
+  }
+
+  .pagination :nth-child(1),
+  .pagination :nth-child(5) {
+    border: 1px dashed white;
+    border-radius: 15px;
+    color: white;
+    font-weight: 600;
+    transition: all .5s;
+  }
+
+  .pagination :nth-child(1):hover,
+  .pagination :nth-child(5):hover {
+    background-color: white;
+    color: #7272FF;
+  }
+
+  .pagination :nth-child(2),
+  .pagination :nth-child(4) {
+    border: 1px solid transparent;
+    color: white;
+    font-size: 16px;
+    transition: all .5s;
+  }
+
+  .pagination :nth-child(2) {
+    margin-left: 15px;
+  }
+
+  .pagination :nth-child(2):hover {
+    border-right-color: white;
+    border-bottom-color: white;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 10px;
+  }
+
+  .pagination :nth-child(4) {
+    margin-right: 15px;
+  }
+
+  .pagination :nth-child(4):hover {
+    border-left-color: white;
+    border-bottom-color: white;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 10px;
+  }
+
+  /* .pagination :nth-child(4):hover {
+  } */
 
   .query-result {
     margin-top: -34rem;
@@ -586,6 +686,22 @@
     right: 15px;
   }
 
+  .result-count {
+    position: fixed;
+    top: 100px;
+  }
+
+  .pagination {
+    position: fixed;
+    right: 25px;
+    width: 550px;
+  }
+
+  .pagination .page-progress {
+    display: inline-block;
+    margin: 0 80px;
+  }
+
     .filters {
       width: fit-content;
       padding: 5px;
@@ -759,6 +875,78 @@
     border: 1px solid #7272FF;
     color: white;
   }
+
+  .result-count {
+    position: fixed;
+    top: 140px;
+    padding: 5px 10px;
+  }
+
+  .pagination {
+    font-size: 10px;
+    /* position: fixed; */
+    /* top: 50px; */
+    left: 10px;
+    width: 320px;
+    /* transform: rotate(90deg); */
+  }
+
+  .pagination button {
+    padding: 2px 5px;
+    font-size: 12px;
+  }
+
+  .pagination .page-progress {
+    /* display: inline-block; */
+    margin: 0 20px;
+  }
+
+  /* .pagination :nth-child(1),
+  .pagination :nth-child(5) {
+    border: 1px dashed white;
+    border-radius: 15px;
+    color: white;
+    font-weight: 600;
+    transition: all .5s;
+  } */
+
+  /* .pagination :nth-child(1):hover,
+  .pagination :nth-child(5):hover {
+    background-color: white;
+    color: #7272FF;
+  } */
+
+  .pagination :nth-child(2),
+  .pagination :nth-child(4) {
+    /* border: 1px solid transparent;
+    color: white; */
+    font-size: 12px;
+    /* transition: all .5s; */
+  }
+
+  .pagination :nth-child(2) {
+    margin-left: 5px;
+  }
+
+  /* .pagination :nth-child(2):hover {
+    border-right-color: white;
+    border-bottom-color: white;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 20px;
+    border-bottom-left-radius: 10px;
+  } */
+
+  .pagination :nth-child(4) {
+    margin-right: 5px;
+  }
+
+  /* .pagination :nth-child(4):hover {
+    border-left-color: white;
+    border-bottom-color: white;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 10px;
+  } */
 
     .filters {
       width: fit-content;
