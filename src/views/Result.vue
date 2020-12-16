@@ -378,6 +378,7 @@
   .query-result {
     margin-top: -34rem;
     margin-left: 30rem;
+    margin-bottom: 50px;
     display: flex;
     flex-wrap: wrap;
     padding: 1rem;
