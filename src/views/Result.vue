@@ -5,24 +5,32 @@
     </div>
 
     <div class="parent">
-      <form @submit.prevent="queryRepo">
+      <div>
         <input
-          type="search"
           placeholder="e.g MubarakSULAYMAN"
           class="small-search-bar"
           v-model="queryTerm"
+          @keyup.enter="requeryRepo"
         />
-        <button type="submit" class="submit-search">
+        <button type="submit" class="submit-search" @click="requeryRepo">
           <img
             src="../assets/fonts/remixicon/search-eye-line.svg"
             alt="Search Icon"
             width="16"
             height="16"
+            v-if="searchStatus === 'Search'"
+          />
+          <font-awesome-icon
+            :icon="['fas', 'spinner']"
+            spin
+            size="lg"
+            :style="{ color: '#7272ff' }"
+            v-if="searchStatus === 'Searching'"
           />
         </button>
-      </form>
+      </div>
 
-      <div class="filters">
+      <div class="filters" v-if="totalCount > 0">
         <div class="filter-group">Filter Group</div>
         <div class="categories">
           <ul>
@@ -76,14 +84,25 @@
         </div>
       </div>
 
-      <!-- <img
+      <img
         src="../assets/images/github4O4.png"
         alt="No result found"
         class="no-result"
-        v-if="noResult"
-      /> -->
+        v-if="emptyPage && $route.query.name"
+      />
 
-<!-- <img
+      <img
+        src="../assets/images/githubHome.png"
+        alt="Custom welcome page, with github octocat and two squirrels."
+        class="welcome-image"
+        v-if="emptyPage && !$route.query.name"
+      />
+      <!-- v-if="!totalCount && (searchStatus !== 'Searching') &&  $route.params.options" -->
+      
+      <!-- <p> Hello </p>
+      <p> {{ !$route.query.name }} </p> -->
+
+      <!-- <img
         src="../assets/images/githubHome.png"
         alt="No result found"
         class="no-result"
@@ -91,26 +110,29 @@
       /> -->
 
       <!-- <div v-else> -->
-      <div>
+      <div v-if="totalCount > 0">
         <div class="result-count">
-          <strong> {{ searchResult.total_count }} results found </strong> / <span> showing 10 </span>
+          <strong> {{ totalCount | formatNum() }} results found </strong> /
+          <span> showing {{ searchResult.length }} </span>
         </div>
 
-        <div class="pagination">
-          <button class="previous">
+        <div class="pagination" v-if="numOfPages !== 0">
+          <button class="previous" @click="gotoPrevious">
             <img
               src="../assets/fonts/remixicon/arrow-left-s-line.svg"
               alt="Followers Icon"
               width="16"
               height="16"
             />
-            Previous
+            Previous <span v-if="stepBack">...</span>
           </button>
-          <button>First</button>
-          <span class="page-progress"> Page 1 of 987 </span>
-          <button>Last</button>
-          <button class="next">
-            Next
+          <button @click="gotoFirst">First</button>
+          <span class="page-progress">
+            Page {{ $route.query.page }} of {{ numOfPages }}
+          </span>
+          <button @click="gotoLast">Last</button>
+          <button class="next" @click="gotoNext">
+            Next <span v-if="stepBack">...</span>
             <img
               src="../assets/fonts/remixicon/arrow-right-s-line.svg"
               alt="Followers Icon"
@@ -121,25 +143,32 @@
         </div>
 
         <div class="query-result">
-          <div class="card-layers" v-for="(item, index) in userDetails" :key="index">
-          <!-- <div class="card-layers"> -->
-            {{ userDetails }}
-            <!-- <div class="card">
+          <div
+            class="card-layers"
+            v-for="(item, index) in searchResult"
+            :key="index"
+          >
+            <div class="card">
               <div class="img-wrap">
-                <img :src="item.avatar_url" :alt="item.name" />
+                <img
+                  :src="item.avatar_url | replaceEmpty('Image URL')"
+                  :alt="item.name | replaceEmpty('Image ALT')"
+                />
               </div>
               <div class="mini-details">
-                <h2>{{ item.name }}</h2>
-                <p class="title">{{ item.location }}</p>
+                <h2>{{ item.name | truncateName() }}</h2>
+                <p class="title">
+                  {{ item.location | replaceEmpty("Location") }}
+                </p>
                 <div class="classified-details">
                   <p class="description">
-                    {{ item.bio }}
+                    {{ item.bio | truncateBio }}
                   </p>
-                  <p class="id">{{ item.login }}</p>
+                  <p class="id">{{ item.login | replaceEmpty("Name") }}</p>
 
                   <div class="extra-details">
                     <div class="followers">
-                      <span class="value"> {{ item.followers }} </span>
+                      <span class="value"> {{ item.followers || "No" }} </span>
                       <img
                         src="../assets/fonts/remixicon/group-line.svg"
                         alt="Followers Icon"
@@ -150,7 +179,7 @@
                     </div>
                     <div class="repos">
                       <span class="value">
-                        {{ item.public_repos }}
+                        {{ item.public_repos || "No" }}
                       </span>
                       <img
                         src="../assets/fonts/remixicon/book-2-line.svg"
@@ -163,7 +192,7 @@
                   </div>
 
                   <a
-                    :href="item.html_url"
+                    :href="item.html_url | replaceEmpty('Profile URL')"
                     target="_blank"
                     rel="noopener noreferrer"
                     class=""
@@ -172,7 +201,7 @@
                   </a>
                 </div>
               </div>
-            </div> -->
+            </div>
           </div>
         </div>
       </div>
@@ -187,11 +216,20 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+// import { mapState } from "vuex";
+import apiRequest from "@/utils/apiUtils";
 
 export default {
   data() {
     return {
+      queryTerm: '',
+      page: 1,
+      searchStatus: 'Search',
+      totalCount: 0,
+      currentPage: 1,
+      stepBack: false,
+      stepUp: false,
+      // noResultFound: false,
       isWarning: false,
     };
   },
@@ -211,27 +249,253 @@ export default {
       setTimeout(() => (this.isWarning = false), 5000);
     },
 
-    queryRepo() {
-      if (this.queryTerm !== "") {
-        // this.$router.push(`/search/${this.queryTerm}`);
-        // this.$router.push(`/search`);
-        this.$store.dispatch("updateSearchResult", this.queryTerm);
+    // async queryRepo(name, page) {
+    async queryRepo(name, page, s, o) {
+      const searchTerm = name;
+
+      if (searchTerm) {
+        this.searchStatus = 'Searching';
+
+        try {
+          let response = await apiRequest.get(
+            // `/search/users?q=${name}&per_page=10&page=${page}&queried_on=${this.getToday}`
+            `/search/users?name=${name}&per_page=10&page=${page}&sort=${s}&order=${o}`
+          );
+
+          if ([200, 201].includes(response.status)) {
+            let items = response.data.items;
+
+            if (items.length === 0) {
+              console.log(`Zero (0) results found for ${searchTerm}.`);
+              this.searchStatus = 'Search';
+              return;
+            }
+
+            for (let i = 0; i < items.length; i++) {
+              let req = await apiRequest.get(`/users/${items[i].login}`);
+
+              items[i] = req.data;
+
+              if (items[i].bio) {
+                items[i].bio = items[i].bio.substring(0, 35);
+              }
+            }
+
+            this.totalCount = response.data.total_count;
+            await this.$store.dispatch("updateSearchResult", response.data);
+            this.searchStatus = 'Search';
+          }
+        } catch (e) {
+          console.log('Error fetching data. Please try again.');
+          console.log(e);
+          this.searchStatus = 'Search';
+        }
+        return;
       }
+
+      console.log('A valid name is required to start');
+    },
+
+    async requeryRepo() {
+      if (this.queryTerm) {
+        this.page = 1
+        await this.queryRepo(this.queryTerm, 1, '', '')
+
+        this.changePage(this.queryTerm, 1, '', '')
+      }
+    },
+
+    changePage(user, page, s, o) {
+      this.$router.push({
+        path: "/search",
+        query: {
+          name: user,
+          page: page,
+          s: s,
+          o: o,
+        },
+      });
+    },
+
+    async gotoPrevious() {
+      let currentPage = parseInt(this.$route.query.page);
+
+      if (currentPage > 1) {
+        this.stepBack = true;
+
+        await this.queryRepo(
+          this.$route.query.name,
+          currentPage - 1,
+          this.$route.query.s,
+          this.$route.query.o
+        );
+
+        this.changePage(
+          this.$route.query.name,
+          currentPage - 1,
+          this.$route.query.s,
+          this.$route.query.o
+        );
+
+        // class binding and error notification here
+        console.log("This is the first page");
+        this.stepBack = false;
+      }
+    },
+
+    async gotoNext() {
+      let currentPage = parseInt(this.$route.query.page);
+
+      if (currentPage < this.numOfPages) {
+        this.stepUp = true;
+
+        await this.queryRepo(
+          this.$route.query.name,
+          currentPage + 1,
+          this.$route.query.s,
+          this.$route.query.o
+        );
+
+        this.changePage(
+          this.$route.query.name,
+          currentPage + 1,
+          this.$route.query.s,
+          this.$route.query.o
+        );
+
+        // class binding and error notification here
+        console.log("This is the last page");
+        this.stepUp = false;
+      }
+    },
+
+    async gotoFirst() {
+      await this.queryRepo(
+        this.$route.query.name,
+        1,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+
+      this.changePage(
+        this.$route.query.name,
+        1,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+    },
+
+    async gotoLast() {
+      await this.queryRepo(
+        this.$route.query.name,
+        this.numOfPages - 1,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+
+      this.changePage(
+        this.$route.query.name,
+        this.numOfPages - 1,
+        this.$route.query.s,
+        this.$route.query.o
+      );
     },
   },
 
   computed: {
-    queryTerm: {
-      get() {
-        return this.$store.getters.username;
-      },
+    // queryTerm: {
+    //   get() {
+    //     return this.$store.getters.username;
+    //   },
 
-      set(value) {
-        this.$store.commit("SET_QUERY_TERM", value);
-      },
+    //   set(value) {
+    //     this.$store.commit("SET_QUERY_TERM", value);
+    //   },
+    // },
+
+    // ...mapState(["searchResult", "noResult"]),
+
+    searchResult() {
+      return this.$store.state.searchResult;
     },
 
-    ...mapState(["searchResult", "noResult", 'userDetails']),
+    numOfPages() {
+      return Math.round(this.totalCount / 10);
+    },
+
+    getToday() {
+      const now = new Date();
+      let dd = String(now.getDate()).padStart(2, "0");
+      let mm = String(now.getMonth() + 1).padStart(2, "0");
+      let yyyy = now.getFullYear();
+      let today = `${dd}_${mm}_${yyyy}`;
+      return today;
+    },
+
+    emptyPage() {
+      return !this.totalCount && (this.searchStatus !== 'Searching')
+    }
+  },
+
+  watch: {
+    $route() {
+      this.queryRepo(
+        this.$route.query.name,
+        this.$route.query.page,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+    },
+  },
+
+  filters: {
+    replaceEmpty: function (value, title) {
+      if (!value) {
+        return `No ${title} Available`;
+      } else return value;
+    },
+
+    truncateName: function (value) {
+      if (!value) {
+        return "No Name here";
+      }
+
+      value = value.toString();
+
+      if (value.length > 21) {
+        value = value.slice(0, 19) + "...";
+        return value;
+      } else return value;
+    },
+
+    truncateBio: function (value) {
+      if (!value) {
+        return "No Bio Available";
+      }
+
+      value = value.toString();
+
+      if (value.length > 37) {
+        value = value.slice(0, 34) + "...";
+        return value;
+      } else return value;
+    },
+
+    formatNum: function (num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
+  },
+
+  mounted() {
+    this.totalCount = this.$store.state.totalResultCount;
+    if (!this.searchResult.length) {
+      this.queryRepo(
+        this.$route.query.name,
+        this.$route.query.page,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+    }
   },
 };
 </script>
@@ -247,7 +511,7 @@ body {
   position: sticky;
   top: 0;
   background: linear-gradient(
-    90deg,
+    45deg,
     rgba(114, 114, 255, 1) 0%,
     rgba(120, 120, 255, 1) 10%,
     rgba(136, 136, 255, 1) 20%,
@@ -323,7 +587,7 @@ body {
 .submit-search {
   position: fixed;
   top: 25px;
-  right: 26px;
+  right: 20px;
   display: block;
   outline: none;
   border: none;
@@ -395,7 +659,14 @@ img.no-result {
   top: 150px;
   right: 250px;
   width: 250px;
-  width: 250px;
+  /* width: 250px; */
+}
+
+img.welcome-image {
+  position: absolute;
+  top: 200px;
+  right: 75px;
+  width: 1200px;
 }
 
 .result-count {
@@ -654,7 +925,7 @@ li.users {
   right: 20px;
   border-radius: 4px;
   background: linear-gradient(
-    90deg,
+    135deg,
     rgba(114, 114, 255, 1) 0%,
     rgba(120, 120, 255, 1) 10%,
     rgba(136, 136, 255, 1) 20%,
@@ -667,7 +938,7 @@ li.users {
     rgba(221, 221, 255, 1) 90%
   );
   background: -webkit-linear-gradient(
-    90deg,
+    135deg,
     rgba(114, 114, 255, 1) 0%,
     rgba(120, 120, 255, 1) 10%,
     rgba(136, 136, 255, 1) 20%,
@@ -680,7 +951,7 @@ li.users {
     rgba(221, 221, 255, 1) 90%
   );
   background: -moz-linear-gradient(
-    90deg,
+    135deg,
     rgba(114, 114, 255, 1) 0%,
     rgba(120, 120, 255, 1) 10%,
     rgba(136, 136, 255, 1) 20%,
@@ -693,7 +964,7 @@ li.users {
     rgba(221, 221, 255, 1) 90%
   );
   background: -o-linear-gradient(
-    90deg,
+    135deg,
     rgba(114, 114, 255, 1) 0%,
     rgba(120, 120, 255, 1) 10%,
     rgba(136, 136, 255, 1) 20%,
@@ -893,11 +1164,11 @@ li.users {
 }
 
 /* .fly-enter-active {
-    animation: rotate 5s;
+    animation: rotate .5s;
 } */
 
 .fly-leave-active {
-  animation: rotate 5s reverse;
+  animation: rotate 0.5s reverse;
 }
 
 /* .fly-enter-active,
@@ -964,8 +1235,8 @@ li.users {
 
   .submit-search {
     position: fixed;
-    top: 26px;
-    right: 15px;
+    top: 24px;
+    right: 10px;
   }
 
   img.no-result {
@@ -974,6 +1245,13 @@ li.users {
     right: 200px;
     width: 250px;
     width: 250px;
+  }
+
+  img.welcome-image {
+    /* position: absolute; */
+    top: 250px;
+    right: 25px;
+    width: 575px;
   }
 
   .result-count {
@@ -1143,7 +1421,7 @@ li.users {
     position: fixed;
     top: 60px;
     display: block;
-    width: 80%;
+    width: 70%;
     margin: auto;
     margin-top: 10px;
     margin-left: 20px;
@@ -1159,7 +1437,7 @@ li.users {
 
   .submit-search {
     position: fixed;
-    top: 72px;
+    top: 70px;
     right: 10px;
     display: block;
     outline: none;
@@ -1174,7 +1452,7 @@ li.users {
 
   .submit-search:hover,
   .submit-search:focus {
-    background-color: #7272ff;
+    background-color: white;
     border: 1px solid #7272ff;
     color: white;
     outline: none;
@@ -1195,6 +1473,13 @@ li.users {
     right: 50px;
     width: 250px;
     width: 250px;
+  }
+
+  img.welcome-image {
+    /* position: absolute; */
+    top: 350px;
+    right: 25px;
+    width: 320px;
   }
 
   .result-count {
@@ -1280,6 +1565,10 @@ li.users {
     /* margin: auto !important; */
     position: relative;
     left: 10%;
+  }
+
+  .card:hover .mini-details button {
+    margin-top: 150px;
   }
 }
 </style>

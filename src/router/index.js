@@ -20,10 +20,18 @@ const routes = [
   //   component: () => import('../views/Result.vue')
   // },
   {
-      // path: '/search/:value',
-      path: '/search',
-      name: 'Result',
-      component: () => import('../views/Result.vue')
+    // path: '/search/:value',
+    path: '/search',
+    name: 'Result',
+    component: () => import('../views/Result.vue'),
+    // props(route) {
+    //   return  route.query || {}
+    // },
+    props: {
+      default: true,
+      // function mode, more about it below
+      sidebar: route => ({ search: route.query.q })
+    }
   },
   // {
   //   path: '/about',

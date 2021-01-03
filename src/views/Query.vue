@@ -1,19 +1,26 @@
 <template>
   <div class="gridlines">
     <div class="gridnav">
-      <p class="app-logo" @click="goTo('/')">Git <span>8</span> k</p>
+      <p class="app-logo">Git <span>8</span> k</p>
     </div>
 
-    <form class="grid-content" @submit.prevent="queryRepo">
+    <div class="grid-content">
       <p class="app-name">Gitook</p>
       <p class="app-motto">Explore GitHub users' data in your own way</p>
       <input
-        type="search"
         placeholder="e.g. MubarakSULAYMAN"
         v-model="queryTerm"
+        @keyup.enter="queryRepo"
       />
-      <button type="submit">Search</button>
-    </form>
+      <button type="button" @click="queryRepo">{{ btnTxt }}</button>
+      <!-- <font-awesome-icon
+            :icon="['fas', 'spinner']"
+            spin
+            size="lg"
+            border
+            :style="{ color: '#7272ff' }"
+          /> -->
+    </div>
 
     <div class="line-1"></div>
     <div class="line-2"></div>
@@ -27,45 +34,97 @@
 </template>
 
 <script>
-// import { mapState }
+import apiRequest from "@/utils/apiUtils";
+
 export default {
   data() {
     return {
-      // username: '',
-      // user_info: null,
+      queryTerm: "",
+      btnTxt: "Search",
     };
   },
 
   methods: {
-    goTo(route) {
-      this.$router.push(route);
+    async queryRepo() {
+      if (this.queryTerm !== "") {
+        this.btnTxt = "Searching...";
+
+        try {
+          let response = await apiRequest.get(
+            `/search/users?q=${this.queryTerm}&per_page=10&page=1`
+          );
+
+          if ([200, 201].includes(response.status)) {
+            let items = response.data.items;
+
+            if (items.length === 0) {
+              console.log(`Zero (0) results found for ${this.queryTerm}.`);
+              this.btnTxt = "Search";
+              return;
+            }
+
+            // items.map((user) => {
+            //   apiRequest.get(`/users/${user.login}`).then((userInfo) => {
+            //     console.log(userInfo.data);
+            //   });
+            // });
+
+            for (let i = 0; i < items.length; i++) {
+              let newResponse = await apiRequest(`/users/${items[i].login}`);
+              items[i] = newResponse.data;
+
+              if (items[i].bio) {
+                items[i].bio = items[i].bio.substring(0, 35);
+              }
+            }
+
+            await this.$store.dispatch("updateSearchResult", response.data);
+
+            this.$router.push({
+              path: "/search",
+              query: {
+                name: this.queryTerm,
+                page: 1,
+                // queried_on: `${this.modifiedToday().split(" ").join("_")}`,
+                // queried_on: `${this.modifiedToday}`,
+              },
+            });
+          }
+        } catch (e) {
+          console.log(e);
+          alert('Error fetching data. Please try again.');
+          this.btnTxt = 'Search';
+        }
+        return;
+      }
+
+      alert('Please enter a valid name');
     },
 
-    queryRepo() {
-      if (this.queryTerm !== "") {
-        // this.$router.push(`/search/${this.queryTerm}`);
-        this.$router.push(`/search`);
-        this.$store.dispatch("updateSearchResult", this.queryTerm);
-        // this.$store.dispatch("setQueryTerm", this.queryTerm);
-      }
+    getYear() {
+      const now = new Date();
+      let yyyy = now.getFullYear();
+      return yyyy;
+    },
+
+    getToday() {
+      const now = new Date();
+      let dd = String(now.getDate()).padStart(2, "0");
+      let mm = String(now.getMonth() + 1).padStart(2, "0");
+      let today = `${dd}_${mm}_${this.getYear()}`;
+      return today;
     },
   },
 
   computed: {
-    queryTerm: {
-      get() {
-        return this.$store.getters.username;
-      },
-
-      set(value) {
-        this.$store.commit("SET_QUERY_TERM", value);
-      },
+    thisYear() {
+      return this.getYear;
+    },
+    modifiedToday() {
+      // return this.getToday;
+      return this.getToday().split(" ").join("_");
     },
   },
-
-  // created() {
-  //   this.queryRepo();
-  // },
 };
 </script>
 
@@ -76,6 +135,19 @@ export default {
 * {
   font-family: "Ubuntu", sans-serif;
 }
+
+/* @keyframes ring {
+  0% {
+    width: 30px;
+    height: 30px;
+    opacity: 1;
+  }
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
+} */
 
 .gridlines {
   position: absolute;
@@ -168,7 +240,7 @@ export default {
 
 input {
   width: 30rem;
-  padding: 1rem .5rem 1rem 1.75rem;
+  padding: 1rem;
   margin: 1rem;
   font-size: 1.5rem;
   text-align: center;
@@ -178,15 +250,26 @@ input {
     1px 1px 0 #7272ff;
   font-weight: bold;
   border-radius: 10rem;
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.1);
+  /* backdrop-filter: saturate(2.5) blur(10px); */
+  /* -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50); */
   border-color: transparent;
 
-  -webkit-backdrop-filter: blur(1.5px);
-  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1px);
+  backdrop-filter: blur(1px);
   box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
     0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
     0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086),
     0 100px 80px rgba(0, 0, 0, 0.12);
+}
+
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+  input {
+    background-color: transparent;
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+  }
 }
 
 input::placeholder {
@@ -257,6 +340,45 @@ input:focus::placeholder {
     rgba(210, 210, 255, 1) 80%,
     rgba(221, 221, 255, 1) 90%
   );
+  background: -webkit-linear-gradient(
+    90deg,
+    rgba(114, 114, 255, 1) 0%,
+    rgba(120, 120, 255, 1) 10%,
+    rgba(136, 136, 255, 1) 20%,
+    rgba(147, 147, 255, 1) 30%,
+    rgba(153, 153, 255, 1) 40%,
+    rgba(170, 170, 255, 1) 50%,
+    rgba(179, 179, 255, 1) 60%,
+    rgba(187, 187, 255, 1) 70%,
+    rgba(210, 210, 255, 1) 80%,
+    rgba(221, 221, 255, 1) 90%
+  );
+  background: -moz-linear-gradient(
+    90deg,
+    rgba(114, 114, 255, 1) 0%,
+    rgba(120, 120, 255, 1) 10%,
+    rgba(136, 136, 255, 1) 20%,
+    rgba(147, 147, 255, 1) 30%,
+    rgba(153, 153, 255, 1) 40%,
+    rgba(170, 170, 255, 1) 50%,
+    rgba(179, 179, 255, 1) 60%,
+    rgba(187, 187, 255, 1) 70%,
+    rgba(210, 210, 255, 1) 80%,
+    rgba(221, 221, 255, 1) 90%
+  );
+  background: -o-linear-gradient(
+    90deg,
+    rgba(114, 114, 255, 1) 0%,
+    rgba(120, 120, 255, 1) 10%,
+    rgba(136, 136, 255, 1) 20%,
+    rgba(147, 147, 255, 1) 30%,
+    rgba(153, 153, 255, 1) 40%,
+    rgba(170, 170, 255, 1) 50%,
+    rgba(179, 179, 255, 1) 60%,
+    rgba(187, 187, 255, 1) 70%,
+    rgba(210, 210, 255, 1) 80%,
+    rgba(221, 221, 255, 1) 90%
+  );
   border-radius: 10rem;
   border: 5px solid white;
 }
@@ -285,6 +407,7 @@ input:focus::placeholder {
 [class*="line-"] {
   width: 12.5vw;
   border-right: 0.5px dashed #e8e8fa;
+  /* border-right: 0.5px dashed red; */
 }
 
 .line-1 {
@@ -328,6 +451,16 @@ input:focus::placeholder {
 }
 
 @media (max-width: 768px) {
+  .gridnav {
+    /* position: absolute;
+  top: 0;
+  left: 0; */
+    width: 95%;
+    /* padding: 1rem; */
+    /* border-bottom: 0.5px dashed red; */
+    /* z-index: 5; */
+  }
+
   .grid-content {
     left: 10vw;
     width: 80vw;
@@ -343,11 +476,11 @@ input:focus::placeholder {
 
   input {
     width: 25rem;
-    padding: 0.6rem 0.5rem 0.6rem 1.5rem;
+    padding: 0.75rem;
     margin: -1rem 0 1rem 0;
     font-size: 1.5rem;
   }
-/* .grid-content button {
+  /* .grid-content button {
   font-size: 1rem;
   color: white; */
   .grid-content button {
@@ -355,7 +488,17 @@ input:focus::placeholder {
     margin-top: 0.2rem;
     border-radius: 5rem;
     border-width: 4px;
-    font-size: .85rem;
+    font-size: 0.85rem;
+  }
+
+  .gridnav {
+    /* position: absolute;
+  top: 0;
+  left: 0; */
+    width: 95%;
+    /* padding: 1rem; */
+    /* border-bottom: 0.5px dashed red; */
+    /* z-index: 5; */
   }
 }
 
@@ -366,6 +509,21 @@ input:focus::placeholder {
 
   .app-logo {
     font-size: 2rem;
+  }
+
+  .gridlines {
+    /* position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-left: 0.5px dashed #e8e8fa; */
+    margin-bottom: 0;
+    /* display: flex;
+  flex-flow: row nowrap;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; */
   }
 
   .grid-content {
@@ -383,8 +541,8 @@ input:focus::placeholder {
   }
 
   input {
-    width: 20rem;
-    padding: 0.5rem 0.4rem 0.5rem 1.2rem;
+    width: 19rem;
+    padding: 0.5rem;
     font-size: 1.25rem;
   }
 }

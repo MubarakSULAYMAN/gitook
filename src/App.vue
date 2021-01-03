@@ -7,14 +7,20 @@
 <script>
 export default {
   methods: {
-    goTo(route) {
-      this.$router.push(route);
-    },
+    // goTo(route) {
+    //   this.$router.push(route);
+    // },
   },
 };
 </script>
 
 <style scoped>
+/* @font-face {
+  font-family: 'WebFont';
+  src: url('myfont.woff') format('woff'),
+       url('myfont.ttf') format('truetype');
+} */
+
 /* @import url("https://fonts.gstatic.com"); */
 @import url("https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap");
 

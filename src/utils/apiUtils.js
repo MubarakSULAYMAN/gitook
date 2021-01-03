@@ -1,11 +1,11 @@
 import axios from 'axios'
 
-let $api = axios.create({
+const apiRequest = axios.create({
     // https://api.github.com/search/code?q={query}{&page,per_page,sort,order}
     // "https://api.github.com/search/users?q={query}{&page,per_page,sort,order}"
     // baseURL: `https://api.github.com/search/`,
     // baseURL: `https://api.github.com/search/users?q=Mubarak&per_page=10&page=1&sort=undefined&order=undefined`,
-    baseURL: `https://api.github.com/search/`,
+    baseURL: `https://api.github.com`,
     // baseURL: `https://api.github.com/`,
     withCredentials: false,
     headers: {
@@ -30,4 +30,4 @@ let $api = axios.create({
     }
 })
 
-export default $api
+export default apiRequest
