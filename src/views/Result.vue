@@ -35,10 +35,10 @@
         <div class="categories">
           <ul>
             <li class="users">Users</li>
-            <li @click="showWarning">Repositories</li>
-            <li @click="showWarning">Commits</li>
-            <li @click="showWarning">Issues</li>
-            <li @click="showWarning">Packages</li>
+            <li @click="showWarning('Feature not available')">Repositories</li>
+            <li @click="showWarning('Feature not available')">Commits</li>
+            <li @click="showWarning('Feature not available')">Issues</li>
+            <li @click="showWarning('Feature not available')">Packages</li>
           </ul>
         </div>
         <div class="others">
@@ -49,7 +49,7 @@
               name="radio"
               id="radioMostFollowers"
               value="Most Followers"
-              @click="showWarning"
+              @click="showWarning('Feature not available')"
             />
             <label for="radioMostFollowers"> Most followers </label>
 
@@ -58,7 +58,7 @@
               name="radio"
               id="radioMostRepos"
               value="Most Repos"
-              @click="showWarning"
+              @click="showWarning('Feature not available')"
             />
             <label for="radioMostRepos"> Most repositories </label>
 
@@ -67,7 +67,7 @@
               name="radio"
               id="radioLeastFollowers"
               value="Least Followers"
-              @click="showWarning"
+              @click="showWarning('Feature not available')"
             />
             <label for="radioLeastFollowers"> Least followers </label>
 
@@ -76,7 +76,7 @@
               name="radio"
               id="radioLeastRepos"
               value="Least Repos"
-              @click="showWarning"
+              @click="showWarning('Feature not available')"
             />
             <label for="radioLeastRepos"> Least repositories </label>
           </div>
@@ -91,25 +91,22 @@
         v-if="emptyPage && $route.query.name"
       />
 
+      <font-awesome-icon
+        :icon="['fas', 'sync-alt']"
+        spin
+        size="10x"
+        :style="{ color: '#7272ff' }"
+        class="sync"
+        v-if="searchStatus === 'Searching'"
+      />
+
       <img
         src="../assets/images/githubHome.png"
         alt="Custom welcome page, with github octocat and two squirrels."
         class="welcome-image"
         v-if="emptyPage && !$route.query.name"
       />
-      <!-- v-if="!totalCount && (searchStatus !== 'Searching') &&  $route.params.options" -->
-      
-      <!-- <p> Hello </p>
-      <p> {{ !$route.query.name }} </p> -->
 
-      <!-- <img
-        src="../assets/images/githubHome.png"
-        alt="No result found"
-        class="no-result"
-        v-if="home"
-      /> -->
-
-      <!-- <div v-else> -->
       <div v-if="totalCount > 0">
         <div class="result-count">
           <strong> {{ totalCount | formatNum() }} results found </strong> /
@@ -209,28 +206,28 @@
 
     <transition name="fly">
       <div class="warning" v-if="isWarning">
-        <p>Feature not available</p>
+        <p>{{ message }}</p>
       </div>
     </transition>
   </div>
 </template>
 
 <script>
-// import { mapState } from "vuex";
+import { mapState } from "vuex";
 import apiRequest from "@/utils/apiUtils";
 
 export default {
   data() {
     return {
-      queryTerm: '',
+      queryTerm: "",
       page: 1,
-      searchStatus: 'Search',
+      searchStatus: "Search",
       totalCount: 0,
       currentPage: 1,
       stepBack: false,
       stepUp: false,
-      // noResultFound: false,
       isWarning: false,
+      message: "",
     };
   },
 
@@ -239,12 +236,8 @@ export default {
       this.$router.push(route);
     },
 
-    showWarning() {
-      // if (this.isWarning) {
-      //   this.isWarning != this.isWarning
-      //   this.isWarning = true
-      // }
-
+    showWarning(message) {
+      this.message = message;
       this.isWarning = true;
       setTimeout(() => (this.isWarning = false), 5000);
     },
@@ -253,7 +246,7 @@ export default {
       const searchTerm = name;
 
       if (searchTerm) {
-        this.searchStatus = 'Searching';
+        this.searchStatus = "Searching";
 
         try {
           let response = await apiRequest.get(
@@ -264,15 +257,21 @@ export default {
             let items = response.data.items;
 
             if (items.length === 0) {
-              console.log(`Zero (0) results found for ${searchTerm}.`);
-              this.searchStatus = 'Search';
+              // alert(`Zero (0) results found for ${searchTerm}.`);
+              this.showWarning(`Zero (0) results found for ${searchTerm}.`);
+              this.searchStatus = "Search";
               return;
             }
 
-            for (let i = 0; i < items.length; i++) {
-              let req = await apiRequest.get(`/users/${items[i].login}`);
+            // items.map((user, i) => {
+            //   apiRequest.get(`/users/${user.login}`).then((userInfo) => {
+            //     console.log(userInfo.data, i)
+            //   });
+            // });
 
-              items[i] = req.data;
+            for (let i = 0; i < items.length; i++) {
+              let newReq = await apiRequest(`/users/${items[i].login}`);
+              items[i] = newReq.data;
 
               if (items[i].bio) {
                 items[i].bio = items[i].bio.substring(0, 35);
@@ -281,25 +280,27 @@ export default {
 
             this.totalCount = response.data.total_count;
             await this.$store.dispatch("updateSearchResult", response.data);
-            this.searchStatus = 'Search';
+            this.searchStatus = "Search";
           }
         } catch (e) {
-          console.log('Error fetching data. Please try again.');
-          console.log(e);
-          this.searchStatus = 'Search';
+          // alert("Error fetching data. Please try again.");
+          this.showWarning("Error fetching data. Please try again.");
+          // console.log(e);
+          this.searchStatus = "Search";
         }
         return;
       }
 
-      console.log('A valid name is required to start');
+      // console.log("A valid name is required to start");
+      this.showWarning("A valid name is required to start");
     },
 
     async requeryRepo() {
       if (this.queryTerm) {
-        this.page = 1
-        await this.queryRepo(this.queryTerm, 1, '', '')
+        this.page = 1;
+        await this.queryRepo(this.queryTerm, 1, "", "");
 
-        this.changePage(this.queryTerm, 1, '', '')
+        this.changePage(this.queryTerm, 1, "", "");
       }
     },
 
@@ -335,8 +336,8 @@ export default {
           this.$route.query.o
         );
 
-        // class binding and error notification here
-        console.log("This is the first page");
+        // class binding for first page and error notification here
+        // console.log("This is the first page");
         this.stepBack = false;
       }
     },
@@ -361,8 +362,8 @@ export default {
           this.$route.query.o
         );
 
-        // class binding and error notification here
-        console.log("This is the last page");
+        // class binding for last page and error notification here
+        // console.log("This is the last page");
         this.stepUp = false;
       }
     },
@@ -401,21 +402,7 @@ export default {
   },
 
   computed: {
-    // queryTerm: {
-    //   get() {
-    //     return this.$store.getters.username;
-    //   },
-
-    //   set(value) {
-    //     this.$store.commit("SET_QUERY_TERM", value);
-    //   },
-    // },
-
-    // ...mapState(["searchResult", "noResult"]),
-
-    searchResult() {
-      return this.$store.state.searchResult;
-    },
+    ...mapState(["searchResult"]),
 
     numOfPages() {
       return Math.round(this.totalCount / 10);
@@ -431,8 +418,8 @@ export default {
     },
 
     emptyPage() {
-      return !this.totalCount && (this.searchStatus !== 'Searching')
-    }
+      return !this.totalCount && this.searchStatus !== "Searching";
+    },
   },
 
   watch: {
@@ -444,6 +431,18 @@ export default {
         this.$route.query.o
       );
     },
+  },
+
+  mounted() {
+    this.totalCount = this.$store.state.totalResultCount;
+    if (!this.searchResult.length) {
+      this.queryRepo(
+        this.$route.query.name,
+        this.$route.query.page,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+    }
   },
 
   filters: {
@@ -482,18 +481,6 @@ export default {
     formatNum: function (num) {
       return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
-  },
-
-  mounted() {
-    this.totalCount = this.$store.state.totalResultCount;
-    if (!this.searchResult.length) {
-      this.queryRepo(
-        this.$route.query.name,
-        this.$route.query.page,
-        this.$route.query.s,
-        this.$route.query.o
-      );
-    }
   },
 };
 </script>
@@ -1186,6 +1173,7 @@ li.users {
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
   transition: all 0.5s;
+  z-index: 1111;
 }
 
 .fly-enter,
@@ -1222,6 +1210,14 @@ li.users {
     transition: transform 0.5s ease-in-out;
   } */
 
+.sync {
+  position: fixed;
+  top: 40%;
+  left: 61.25%;
+  transform: translate(-50%, -50%);
+  z-index: 2222;
+}
+
 @media (max-width: 768px) {
   .small-search-bar {
     position: fixed;
@@ -1239,7 +1235,7 @@ li.users {
 
   img.no-result {
     position: absolute;
-    top: 250px;
+    top: 150px;
     right: 200px;
     width: 250px;
     width: 250px;
@@ -1402,6 +1398,10 @@ li.users {
   .card .mini-details button {
     padding: 6px 12px;
     font-size: 12px;
+  }
+
+  .sync {
+    left: 36.25%;
   }
 }
 
@@ -1567,6 +1567,10 @@ li.users {
 
   .card:hover .mini-details button {
     margin-top: 150px;
+  }
+
+  .sync {
+    left: 30%;
   }
 }
 </style>

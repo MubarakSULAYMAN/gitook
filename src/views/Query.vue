@@ -13,13 +13,6 @@
         @keyup.enter="queryRepo"
       />
       <button type="button" @click="queryRepo">{{ btnTxt }}</button>
-      <!-- <font-awesome-icon
-            :icon="['fas', 'spinner']"
-            spin
-            size="lg"
-            border
-            :style="{ color: '#7272ff' }"
-          /> -->
     </div>
 
     <div class="line-1"></div>
@@ -30,6 +23,12 @@
     <div class="line-6"></div>
     <div class="line-7"></div>
     <div class="line-8"></div>
+
+    <transition name="fly">
+      <div class="warning" v-if="isWarning">
+        <p>{{ message }}</p>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -41,10 +40,18 @@ export default {
     return {
       queryTerm: "",
       btnTxt: "Search",
+      isWarning: false,
+      message: "",
     };
   },
 
   methods: {
+    showWarning(message) {
+      this.message = message;
+      this.isWarning = true;
+      setTimeout(() => (this.isWarning = false), 5000);
+    },
+
     async queryRepo() {
       if (this.queryTerm !== "") {
         this.btnTxt = "Searching...";
@@ -58,20 +65,20 @@ export default {
             let items = response.data.items;
 
             if (items.length === 0) {
-              console.log(`Zero (0) results found for ${this.queryTerm}.`);
+              alert(`Zero (0) results found for ${this.queryTerm}.`);
               this.btnTxt = "Search";
               return;
             }
 
-            // items.map((user) => {
+            // items.map((user, i) => {
             //   apiRequest.get(`/users/${user.login}`).then((userInfo) => {
-            //     console.log(userInfo.data);
+            //     console.log(userInfo.data, i)
             //   });
             // });
 
             for (let i = 0; i < items.length; i++) {
-              let newResponse = await apiRequest(`/users/${items[i].login}`);
-              items[i] = newResponse.data;
+              let newReq = await apiRequest(`/users/${items[i].login}`);
+              items[i] = newReq.data;
 
               if (items[i].bio) {
                 items[i].bio = items[i].bio.substring(0, 35);
@@ -85,20 +92,21 @@ export default {
               query: {
                 name: this.queryTerm,
                 page: 1,
-                // queried_on: `${this.modifiedToday().split(" ").join("_")}`,
                 // queried_on: `${this.modifiedToday}`,
               },
             });
           }
         } catch (e) {
-          console.log(e);
-          alert('Error fetching data. Please try again.');
-          this.btnTxt = 'Search';
+          // console.log(e);
+          // alert("Error fetching data. Please try again.");
+          this.showWarning("Error fetching data. Please try again.");
+          this.btnTxt = "Search";
         }
         return;
       }
 
-      alert('Please enter a valid name');
+      // alert("Please enter a valid name");
+      this.showWarning("Please enter a valid name");
     },
 
     getYear() {
@@ -121,7 +129,6 @@ export default {
       return this.getYear;
     },
     modifiedToday() {
-      // return this.getToday;
       return this.getToday().split(" ").join("_");
     },
   },
@@ -449,6 +456,79 @@ input:focus::placeholder {
 .line-10 {
   background-color: #ddddff;
 }
+
+@keyframes rotate {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* .fly-enter-active {
+    animation: rotate .5s;
+} */
+
+.fly-leave-active {
+  animation: rotate 0.5s reverse;
+}
+
+/* .fly-enter-active,
+  .fly-leave-active { */
+.warning {
+  position: fixed;
+  bottom: 34px;
+  left: 66px;
+  display: inline-block;
+  padding: 5px 10px;
+  border: 2px solid red;
+  border-radius: 5px;
+  font-size: 20px;
+  color: red;
+  box-shadow: 4px 4px red;
+  background-color: transparent;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: all 0.5s;
+  z-index: 999;
+}
+
+.fly-enter,
+.fly-leave-to {
+  transform: scaleY(0);
+  position: fixed;
+  bottom: -999px;
+  left: -999px;
+}
+
+.warning:hover {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+/* .warning .active {
+    position: fixed;
+    top: 999px;
+    right: -999px;
+  } */
+
+.warning p {
+  margin: 0;
+}
+
+.warning p .active {
+  position: fixed;
+  bottom: -999px;
+  left: 999px;
+}
+
+/* .fly-enter-active,
+  .fly-leave-active {
+    transition: transform 0.5s ease-in-out;
+  } */
 
 @media (max-width: 768px) {
   .gridnav {
