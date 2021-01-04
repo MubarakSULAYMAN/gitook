@@ -65,7 +65,7 @@ export default {
             let items = response.data.items;
 
             if (items.length === 0) {
-              alert(`Zero (0) results found for ${this.queryTerm}.`);
+              // alert(`Zero (0) results found for ${this.queryTerm}.`);
               this.showWarning(`Zero (0) results found for ${this.queryTerm}.`);
               this.btnTxt = "Search";
               return;
