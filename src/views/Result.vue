@@ -121,7 +121,7 @@
               width="16"
               height="16"
             />
-            Previous <span v-if="stepBack">...</span>
+            Previous
           </button>
           <button @click="gotoFirst">First</button>
           <span class="page-progress">
@@ -129,7 +129,7 @@
           </span>
           <button @click="gotoLast">Last</button>
           <button class="next" @click="gotoNext">
-            Next <span v-if="stepBack">...</span>
+            Next
             <img
               src="../assets/fonts/remixicon/arrow-right-s-line.svg"
               alt="Followers Icon"
@@ -336,9 +336,10 @@ export default {
           this.$route.query.o
         );
 
-        // class binding for first page and error notification here
-        // console.log("This is the first page");
         this.stepBack = false;
+      } else {
+        this.showWarning("No page before this.");
+        return;
       }
     },
 
@@ -362,9 +363,10 @@ export default {
           this.$route.query.o
         );
 
-        // class binding for last page and error notification here
-        // console.log("This is the last page");
         this.stepUp = false;
+      } else {
+        this.showWarning("No page after this.");
+        return;
       }
     },
 
