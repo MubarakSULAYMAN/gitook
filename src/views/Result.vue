@@ -249,7 +249,6 @@ export default {
       setTimeout(() => (this.isWarning = false), 5000);
     },
 
-    // async queryRepo(name, page) {
     async queryRepo(name, page, s, o) {
       const searchTerm = name;
 
@@ -258,8 +257,7 @@ export default {
 
         try {
           let response = await apiRequest.get(
-            // `/search/users?q=${name}&per_page=10&page=${page}&queried_on=${this.getToday}`
-            `/search/users?name=${name}&per_page=10&page=${page}&sort=${s}&order=${o}`
+            `/search/users?q=${name}&per_page=10&page=${page}&sort=${s}&order=${o}`
           );
 
           if ([200, 201].includes(response.status)) {
@@ -388,14 +386,14 @@ export default {
     async gotoLast() {
       await this.queryRepo(
         this.$route.query.name,
-        this.numOfPages - 1,
+        this.numOfPages,
         this.$route.query.s,
         this.$route.query.o
       );
 
       this.changePage(
         this.$route.query.name,
-        this.numOfPages - 1,
+        this.numOfPages,
         this.$route.query.s,
         this.$route.query.o
       );
