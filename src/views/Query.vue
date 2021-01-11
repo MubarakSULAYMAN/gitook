@@ -128,7 +128,7 @@ export default {
       }
 
       // alert("Please enter a valid name");
-      this.showWarning("Please enter a valid name");
+      this.showWarning("Please enter a valid name to start a search.");
     },
 
     getYear() {
@@ -472,11 +472,11 @@ input:focus::placeholder {
 .grid-content button:focus {
   outline: none;
   transform: scale(1.1);
-	animation-name: spaceboots;
-	animation-duration: 0.8s;
-	transform-origin:50% 50%;
-	animation-iteration-count: infinite;
-	animation-timing-function: linear;
+  animation-name: spaceboots;
+  animation-duration: 0.8s;
+  transform-origin: 50% 50%;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }
 
 [class*="line-"] {

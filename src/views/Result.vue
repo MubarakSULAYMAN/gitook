@@ -30,61 +30,57 @@
         </button>
       </div>
 
-      <div v-if="totalCount > 0">
-        <div class="filters">
-          <div class="filter-group">Filter Group</div>
-          <div class="categories">
-            <ul>
-              <li class="users">Users</li>
-              <li @click="showWarning('Feature not available')">
-                Repositories
-              </li>
-              <li @click="showWarning('Feature not available')">Commits</li>
-              <li @click="showWarning('Feature not available')">Issues</li>
-              <li @click="showWarning('Feature not available')">Packages</li>
-            </ul>
+      <div class="filters" v-if="totalCount > 0">
+        <div class="filter-group">Filter Group</div>
+        <div class="categories">
+          <ul>
+            <li class="users">Users</li>
+            <li @click="showWarning('Feature not available')">Repositories</li>
+            <li @click="showWarning('Feature not available')">Commits</li>
+            <li @click="showWarning('Feature not available')">Issues</li>
+            <li @click="showWarning('Feature not available')">Packages</li>
+          </ul>
+        </div>
+        <div class="others">
+          <div class="title">Filters</div>
+          <div class="radio-toolbar">
+            <input
+              type="radio"
+              name="radio"
+              id="radioMostFollowers"
+              value="Most Followers"
+              @click="showWarning('Feature not available')"
+            />
+            <label for="radioMostFollowers"> Most followers </label>
+
+            <input
+              type="radio"
+              name="radio"
+              id="radioMostRepos"
+              value="Most Repos"
+              @click="showWarning('Feature not available')"
+            />
+            <label for="radioMostRepos"> Most repositories </label>
+
+            <input
+              type="radio"
+              name="radio"
+              id="radioLeastFollowers"
+              value="Least Followers"
+              @click="showWarning('Feature not available')"
+            />
+            <label for="radioLeastFollowers"> Least followers </label>
+
+            <input
+              type="radio"
+              name="radio"
+              id="radioLeastRepos"
+              value="Least Repos"
+              @click="showWarning('Feature not available')"
+            />
+            <label for="radioLeastRepos"> Least repositories </label>
           </div>
-          <div class="others">
-            <div class="title">Filters</div>
-            <div class="radio-toolbar">
-              <input
-                type="radio"
-                name="radio"
-                id="radioMostFollowers"
-                value="Most Followers"
-                @click="showWarning('Feature not available')"
-              />
-              <label for="radioMostFollowers"> Most followers </label>
-
-              <input
-                type="radio"
-                name="radio"
-                id="radioMostRepos"
-                value="Most Repos"
-                @click="showWarning('Feature not available')"
-              />
-              <label for="radioMostRepos"> Most repositories </label>
-
-              <input
-                type="radio"
-                name="radio"
-                id="radioLeastFollowers"
-                value="Least Followers"
-                @click="showWarning('Feature not available')"
-              />
-              <label for="radioLeastFollowers"> Least followers </label>
-
-              <input
-                type="radio"
-                name="radio"
-                id="radioLeastRepos"
-                value="Least Repos"
-                @click="showWarning('Feature not available')"
-              />
-              <label for="radioLeastRepos"> Least repositories </label>
-            </div>
-            <!-- <p>&nbsp;</p> -->
-          </div>
+          <!-- <p>&nbsp;</p> -->
         </div>
       </div>
 
@@ -349,8 +345,7 @@ export default {
         return;
       }
 
-      // console.log("A valid name is required to start");
-      this.showWarning("A valid name is required to start");
+      this.showWarning("A valid name is required to start a search.");
     },
 
     async requeryRepo() {
