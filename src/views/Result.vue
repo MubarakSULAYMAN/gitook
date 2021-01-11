@@ -30,57 +30,61 @@
         </button>
       </div>
 
-      <div class="filters" v-if="totalCount > 0">
-        <div class="filter-group">Filter Group</div>
-        <div class="categories">
-          <ul>
-            <li class="users">Users</li>
-            <li @click="showWarning('Feature not available')">Repositories</li>
-            <li @click="showWarning('Feature not available')">Commits</li>
-            <li @click="showWarning('Feature not available')">Issues</li>
-            <li @click="showWarning('Feature not available')">Packages</li>
-          </ul>
-        </div>
-        <div class="others">
-          <span>Filters</span>
-          <div class="radio-toolbar">
-            <input
-              type="radio"
-              name="radio"
-              id="radioMostFollowers"
-              value="Most Followers"
-              @click="showWarning('Feature not available')"
-            />
-            <label for="radioMostFollowers"> Most followers </label>
-
-            <input
-              type="radio"
-              name="radio"
-              id="radioMostRepos"
-              value="Most Repos"
-              @click="showWarning('Feature not available')"
-            />
-            <label for="radioMostRepos"> Most repositories </label>
-
-            <input
-              type="radio"
-              name="radio"
-              id="radioLeastFollowers"
-              value="Least Followers"
-              @click="showWarning('Feature not available')"
-            />
-            <label for="radioLeastFollowers"> Least followers </label>
-
-            <input
-              type="radio"
-              name="radio"
-              id="radioLeastRepos"
-              value="Least Repos"
-              @click="showWarning('Feature not available')"
-            />
-            <label for="radioLeastRepos"> Least repositories </label>
+      <div v-if="totalCount > 0">
+        <div class="filters">
+          <div class="filter-group">Filter Group</div>
+          <div class="categories">
+            <ul>
+              <li class="users">Users</li>
+              <li @click="showWarning('Feature not available')">
+                Repositories
+              </li>
+              <li @click="showWarning('Feature not available')">Commits</li>
+              <li @click="showWarning('Feature not available')">Issues</li>
+              <li @click="showWarning('Feature not available')">Packages</li>
+            </ul>
           </div>
-          <!-- <p>&nbsp;</p> -->
+          <div class="others">
+            <div class="title">Filters</div>
+            <div class="radio-toolbar">
+              <input
+                type="radio"
+                name="radio"
+                id="radioMostFollowers"
+                value="Most Followers"
+                @click="showWarning('Feature not available')"
+              />
+              <label for="radioMostFollowers"> Most followers </label>
+
+              <input
+                type="radio"
+                name="radio"
+                id="radioMostRepos"
+                value="Most Repos"
+                @click="showWarning('Feature not available')"
+              />
+              <label for="radioMostRepos"> Most repositories </label>
+
+              <input
+                type="radio"
+                name="radio"
+                id="radioLeastFollowers"
+                value="Least Followers"
+                @click="showWarning('Feature not available')"
+              />
+              <label for="radioLeastFollowers"> Least followers </label>
+
+              <input
+                type="radio"
+                name="radio"
+                id="radioLeastRepos"
+                value="Least Repos"
+                @click="showWarning('Feature not available')"
+              />
+              <label for="radioLeastRepos"> Least repositories </label>
+            </div>
+            <!-- <p>&nbsp;</p> -->
+          </div>
         </div>
       </div>
 
@@ -228,6 +232,60 @@ export default {
       stepUp: false,
       isWarning: false,
       message: "",
+
+      // searchFilters: [
+      //   {
+      categoryFilters: [
+        {
+          name: "Users",
+          class: "users",
+          active: true,
+        },
+        {
+          name: "Repositories",
+          class: "repositories",
+          active: false,
+        },
+        {
+          name: "Commits",
+          class: "commits",
+          active: false,
+        },
+        {
+          name: "Issues",
+          class: "issues",
+          active: false,
+        },
+        {
+          name: "Packages",
+          class: "packages",
+          active: false,
+        },
+      ],
+      // },
+      // {
+      otherFilters: [
+        {
+          id: "radioMostFollowers",
+          value: "Most Followers",
+        },
+        {
+          id: "radioMostRepos",
+          value: "Most Repos",
+        },
+        {
+          id: "radioLeastFollowers",
+          value: "Least Followers",
+        },
+        {
+          id: "radioLeastRepos",
+          value: "Least Repos",
+        },
+      ],
+      //   },
+      // ],
+
+      filters: [],
     };
   },
 
@@ -263,7 +321,7 @@ export default {
               return;
             }
 
-            // items.map((user, i) => {
+            // x = items.map((user, i) => {
             //   apiRequest.get(`/users/${user.login}`).then((userInfo) => {
             //     console.log(userInfo.data, i)
             //   });
@@ -401,6 +459,26 @@ export default {
         this.$route.query.o
       );
     },
+
+    // loadFilters() {
+    //   this.filters = this.searchFilters.map((filters) => {
+    //     return {
+    //       categories: filters.categories,
+    //       others: filters.others,
+    //     };
+    //   });
+    //   // this.summary = response.data.map((expense_group) => {
+    //   //         return {
+    //   //           name: expense_group.name,
+    //   //           expenses: expense_group.expenses,
+    //   //           total_expense: expense_group.expenses.reduce(
+    //   //             (total, expense) =>
+    //   //               parseInt(total) + parseInt(expense.amount),
+    //   //             0
+    //   //           ),
+    //   //         };
+    //   //       });
+    // },
   },
 
   computed: {
@@ -435,26 +513,14 @@ export default {
     },
   },
 
-  mounted() {
-    this.totalCount = this.$store.state.totalResultCount;
-    if (!this.searchResult.length) {
-      this.queryRepo(
-        this.$route.query.name,
-        this.$route.query.page,
-        this.$route.query.s,
-        this.$route.query.o
-      );
-    }
-  },
-
   filters: {
-    replaceEmpty: function (value, title) {
+    replaceEmpty(value, title) {
       if (!value) {
-        return `No ${title} Available`;
+        return `No ${title} Provided.`;
       } else return value;
     },
 
-    truncateName: function (value) {
+    truncateName(value) {
       if (!value) {
         return "No Name here";
       }
@@ -467,9 +533,9 @@ export default {
       } else return value;
     },
 
-    truncateBio: function (value) {
+    truncateBio(value) {
       if (!value) {
-        return "No Bio Available";
+        return "No Bio Provided";
       }
 
       value = value.toString();
@@ -480,9 +546,25 @@ export default {
       } else return value;
     },
 
-    formatNum: function (num) {
+    formatNum(num) {
       return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
+  },
+
+  // created() {
+  //   this.loadFilters();
+  // },
+
+  mounted() {
+    this.totalCount = this.$store.state.totalResultCount;
+    if (!this.searchResult.length) {
+      this.queryRepo(
+        this.$route.query.name,
+        this.$route.query.page,
+        this.$route.query.s,
+        this.$route.query.o
+      );
+    }
   },
 };
 </script>
@@ -607,22 +689,27 @@ body {
   } */
 
 .filters {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 100px;
   margin: 4rem;
   display: block;
   width: 23rem;
   background-color: white;
-  position: -webkit-sticky;
-  position: sticky;
-  top: 100px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
 }
 
-.filters .categories ul li {
+/* .filters .categories ul li {
   cursor: grab;
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
-}
+} */
 
 .filter-group {
   display: inline-block;
@@ -773,7 +860,7 @@ img.welcome-image {
   padding: 1rem;
 }
 
-.others span {
+.others .title {
   color: #7272ff;
   font-size: 20px;
   font-weight: 600;
@@ -825,6 +912,7 @@ li.users {
 }
 
 .radio-toolbar {
+  display: inline-block;
   margin: 10px;
 }
 
@@ -1347,7 +1435,7 @@ li.users {
     padding: 1rem;
   }
 
-  .others span {
+  .others .title {
     color: #7272ff;
     font-size: 20px;
     font-weight: 600;
@@ -1554,7 +1642,8 @@ li.users {
   }
 
   .radio-toolbar {
-    margin: 5px;
+    display: inline-block;
+    /* margin: 5px; */
   }
 
   .radio-toolbar label {

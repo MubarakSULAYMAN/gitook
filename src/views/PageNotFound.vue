@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div @mouseover="visible = true" @mouseleave="visible = false">
     <div class="intro">We understand how embarrassing it can be when lost.</div>
 
     <img src="../assets/images/lookup.svg" alt="Image showing a woman on a lookout." />
 
-    <div class="return-home">
+    <div class="return-home" v-if="visible" >
       Let's help you <span @click="goTo('/')">return</span> safely.
     </div>
   </div>
@@ -12,6 +12,12 @@
 
 <script>
 export default {
+  data() {
+    return {
+      visible: false
+    }
+  },
+
   methods: {
     goTo(route) {
       this.$router.push(route);
@@ -42,19 +48,17 @@ export default {
 
 span {
   display: inline-block;
-  /* text-decoration: underline; */
-}
-
-span:hover {
   padding: 0 5px;
   border-radius: 5px;
   background-color: #7272ff;
   color: white;
+  font-weight: bolder;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .return-home:hover span {
-  font-weight: bolder;
+  font-weight: normal;
   transform: scale(1.1);
 }
 
