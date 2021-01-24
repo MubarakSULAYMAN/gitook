@@ -10,10 +10,10 @@
       <input
         placeholder="e.g. MubarakSULAYMAN"
         v-model="queryTerm"
-        @keyup.enter="queryRepo"
+        @keyup.enter="queryUser"
       />
 
-      <button type="button" @click="queryRepo">{{ btnTxt }}</button>
+      <button type="button" @click="queryUser">{{ btnTxt }}</button>
     </div>
 
     <div class="line-1"></div>
@@ -73,7 +73,7 @@ export default {
       setTimeout(() => (this.isWarning = false), 5000);
     },
 
-    async queryRepo() {
+    async queryUser() {
       if (this.queryTerm !== "") {
         this.btnTxt = "Searching...";
 

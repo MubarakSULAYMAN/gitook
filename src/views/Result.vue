@@ -10,9 +10,9 @@
           placeholder="e.g MubarakSULAYMAN"
           class="small-search-bar"
           v-model="queryTerm"
-          @keyup.enter="requeryRepo"
+          @keyup.enter="requeryUser"
         />
-        <button type="submit" class="submit-search" @click="requeryRepo">
+        <button type="submit" class="submit-search" @click="requeryUser">
           <img
             src="../assets/fonts/remixicon/search-eye-line.svg"
             alt="Search Icon"
@@ -49,7 +49,7 @@
               name="radio"
               id="radioMostFollowers"
               value="Most Followers"
-              @click="showWarning('Feature not available')"
+              @click="sortByMostFollowers"
             />
             <label for="radioMostFollowers"> Most followers </label>
 
@@ -58,7 +58,7 @@
               name="radio"
               id="radioMostRepos"
               value="Most Repos"
-              @click="showWarning('Feature not available')"
+              @click="sortByMostRepos"
             />
             <label for="radioMostRepos"> Most repositories </label>
 
@@ -67,7 +67,7 @@
               name="radio"
               id="radioLeastFollowers"
               value="Least Followers"
-              @click="showWarning('Feature not available')"
+              @click="sortByLeastFollowers"
             />
             <label for="radioLeastFollowers"> Least followers </label>
 
@@ -76,7 +76,7 @@
               name="radio"
               id="radioLeastRepos"
               value="Least Repos"
-              @click="showWarning('Feature not available')"
+              @click="sortByLeastRepos"
             />
             <label for="radioLeastRepos"> Least repositories </label>
           </div>
@@ -228,6 +228,8 @@ export default {
       stepUp: false,
       isWarning: false,
       message: "",
+      filterTerm: "",
+      filterOrder: "",
 
       // searchFilters: [
       //   {
@@ -296,22 +298,23 @@ export default {
       setTimeout(() => (this.isWarning = false), 5000);
     },
 
-    async queryRepo(name, page, s, o) {
+    async queryUser(name, page, sort, order) {
       const searchTerm = name;
 
       if (searchTerm) {
         this.searchStatus = "Searching";
+        this.filterTerm = sort;
+        this.filterOrder = order;
 
         try {
           let response = await apiRequest.get(
-            `/search/users?q=${name}&per_page=10&page=${page}&sort=${s}&order=${o}`
+            `/search/users?q=${name}&per_page=10&page=${page}&sort=${sort}&order=${order}`
           );
 
           if ([200, 201].includes(response.status)) {
             let items = response.data.items;
 
             if (items.length === 0) {
-              // alert(`Zero (0) results found for ${searchTerm}.`);
               this.showWarning(`Zero (0) results found for ${searchTerm}.`);
               this.searchStatus = "Search";
               return;
@@ -337,7 +340,6 @@ export default {
             this.searchStatus = "Search";
           }
         } catch (e) {
-          // alert("Error fetching data. Please try again.");
           this.showWarning("Error fetching data. Please try again.");
           // console.log(e);
           this.searchStatus = "Search";
@@ -345,26 +347,69 @@ export default {
         return;
       }
 
+      // else if (this.$route.query.name === "") {
+      //   this.showWarning("A valid name is required to start a search.");
+      // }
+
       this.showWarning("A valid name is required to start a search.");
+      // alert(this.$route.query.name)
     },
 
-    async requeryRepo() {
+    async requeryUser() {
       if (this.queryTerm) {
         this.page = 1;
-        await this.queryRepo(this.queryTerm, 1, "", "");
+        await this.queryUser(
+          this.queryTerm,
+          1,
+          this.filterTerm,
+          this.filterOrder
+        );
 
-        this.changePage(this.queryTerm, 1, "", "");
+        this.changePage(this.queryTerm, 1, this.filterTerm, this.filterOrder);
       }
     },
 
-    changePage(user, page, s, o) {
+    async sortByMostFollowers() {
+      this.filterTerm = "followers";
+      this.filterOrder = "desc";
+      this.queryTerm = this.$route.query.name;
+      this.currentPage = this.$route.query.page;
+      // await this.queryUser(this.queryTerm, this.currentPage, this.filterTerm, this.filterOrder);
+      await this.requeryUser();
+    },
+
+    async sortByMostRepos() {
+      this.filterTerm = "repositories";
+      this.filterOrder = "desc";
+      this.queryTerm = this.$route.query.name;
+      this.currentPage = this.$route.query.page;
+      await this.requeryUser();
+    },
+
+    async sortByLeastFollowers() {
+      this.filterTerm = "followers";
+      this.filterOrder = "asc";
+      this.queryTerm = this.$route.query.name;
+      this.currentPage = this.$route.query.page;
+      await this.requeryUser();
+    },
+
+    async sortByLeastRepos() {
+      this.filterTerm = "repositories";
+      this.filterOrder = "asc";
+      this.queryTerm = this.$route.query.name;
+      this.currentPage = this.$route.query.page;
+      await this.requeryUser();
+    },
+
+    changePage(user, page, sort, order) {
       this.$router.push({
         path: "/search",
         query: {
           name: user,
           page: page,
-          s: s,
-          o: o,
+          s: sort,
+          o: order,
         },
       });
     },
@@ -375,7 +420,7 @@ export default {
       if (currentPage > 1) {
         this.stepBack = true;
 
-        await this.queryRepo(
+        await this.queryUser(
           this.$route.query.name,
           currentPage - 1,
           this.$route.query.s,
@@ -402,7 +447,7 @@ export default {
       if (currentPage < this.numOfPages) {
         this.stepUp = true;
 
-        await this.queryRepo(
+        await this.queryUser(
           this.$route.query.name,
           currentPage + 1,
           this.$route.query.s,
@@ -424,7 +469,7 @@ export default {
     },
 
     async gotoFirst() {
-      await this.queryRepo(
+      await this.queryUser(
         this.$route.query.name,
         1,
         this.$route.query.s,
@@ -440,7 +485,7 @@ export default {
     },
 
     async gotoLast() {
-      await this.queryRepo(
+      await this.queryUser(
         this.$route.query.name,
         this.numOfPages,
         this.$route.query.s,
@@ -499,7 +544,7 @@ export default {
 
   watch: {
     $route() {
-      this.queryRepo(
+      this.queryUser(
         this.$route.query.name,
         this.$route.query.page,
         this.$route.query.s,
@@ -553,7 +598,7 @@ export default {
   mounted() {
     this.totalCount = this.$store.state.totalResultCount;
     if (!this.searchResult.length) {
-      this.queryRepo(
+      this.queryUser(
         this.$route.query.name,
         this.$route.query.page,
         this.$route.query.s,
@@ -668,6 +713,11 @@ body {
   color: white;
   outline: none;
   transform: scale(1.1);
+}
+
+a button:focus {
+  border: none;
+  outline: none;
 }
 
 /* .submit-search:hover img,
