@@ -147,9 +147,9 @@ export default {
   },
 
   computed: {
-    followersCount() {
-      return this.followersCheck();
-    },
+    // followersCount() {
+    //   return this.followersCheck();
+    // },
 
     thisYear() {
       return this.getYear;
@@ -159,9 +159,9 @@ export default {
     },
   },
 
-  created() {
-    this.followersCount();
-  },
+  // created() {
+  //   this.followersCount();
+  // },
 };
 </script>
 

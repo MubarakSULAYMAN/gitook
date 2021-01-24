@@ -34,51 +34,135 @@
         <div class="filter-group">Filter Group</div>
         <div class="categories">
           <ul>
-            <li class="users">Users</li>
-            <li @click="showWarning('Feature not available')">Repositories</li>
-            <li @click="showWarning('Feature not available')">Commits</li>
-            <li @click="showWarning('Feature not available')">Issues</li>
-            <li @click="showWarning('Feature not available')">Packages</li>
+            <!-- <li tabindex="0" :class="[pageFilter.includes('/users') ? activeClass : '', 'user-li']" @click="requeryUser">Users</li> -->
+            <li
+              tabindex="0"
+              :class="[pageFilter === 'users' ? 'activeClass' : '', 'user-li']"
+              @click="requeryUser"
+            >
+              Users
+            </li>
+            <li
+              tabindex="1"
+              :class="[
+                pageFilter === 'repositories' ? 'activeClass' : '',
+                'repo-li',
+              ]"
+              @click="queryRepo"
+            >
+              Repositories
+            </li>
+            <li
+              tabindex="2"
+              :class="[
+                pageFilter === 'commits' ? 'activeClass' : '',
+                'commit-li',
+              ]"
+              @click="queryCommit"
+            >
+              Commits
+            </li>
+            <li
+              tabindex="3"
+              :class="[
+                pageFilter === 'issues' ? 'activeClass' : '',
+                'issue-li',
+              ]"
+              @click="queryIssue"
+            >
+              Issues
+            </li>
+            <li
+              tabindex="4"
+              :class="[
+                pageFilter === 'packages' ? 'activeClass' : '',
+                'package-li',
+              ]"
+              @click="queryPackage"
+            >
+              Packages
+            </li>
           </ul>
         </div>
         <div class="others">
           <div class="title">Filters</div>
-          <div class="radio-toolbar">
-            <input
+          <div class="filter-toolbar">
+            <!-- <input
               type="radio"
               name="radio"
               id="radioMostFollowers"
               value="Most Followers"
+              class="firstcard"
               @click="sortByMostFollowers"
             />
-            <label for="radioMostFollowers"> Most followers </label>
+            <label for="radioMostFollowers"
+              class="firstcard"> Most followers </label> -->
 
-            <input
+            <span
+              tabindex="6"
+              :class="[
+                pageRoute.includes('followers') && pageRoute.includes('desc')
+                  ? 'filterClass'
+                  : '',
+                'filter-option',
+              ]"
+              @click="sortByMostFollowers"
+              >Most Followers</span
+            >
+            <!-- class="filter-option" -->
+
+            <!-- <input
               type="radio"
               name="radio"
               id="radioMostRepos"
               value="Most Repos"
               @click="sortByMostRepos"
             />
-            <label for="radioMostRepos"> Most repositories </label>
+            <label for="radioMostRepos"> Most repositories </label> -->
+            <span
+              tabindex="7"
+              :class="[
+                pageRoute.includes('repositories') && pageRoute.includes('desc')
+                  ? 'filterClass'
+                  : '',
+                'filter-option',
+              ]"
+              @click="sortByMostRepos"
+              >Most repositories</span
+            >
 
-            <input
+            <!-- <input
               type="radio"
               name="radio"
               id="radioLeastFollowers"
               value="Least Followers"
               @click="sortByLeastFollowers"
             />
-            <label for="radioLeastFollowers"> Least followers </label>
+            <label for="radioLeastFollowers"> Least followers </label> -->
+            <span
+              tabindex="8"
+              :class="[pageRoute.includes('followers') && pageRoute.includes('asc') ? 'filterClass' : '', 'filter-option']"
+              @click="sortByLeastFollowers"
+              >Least followers</span
+            >
 
-            <input
+            <!-- <input
               type="radio"
               name="radio"
               id="radioLeastRepos"
               value="Least Repos"
               @click="sortByLeastRepos"
             />
-            <label for="radioLeastRepos"> Least repositories </label>
+            <label for="radioLeastRepos"> Least repositories </label> -->
+            <span
+              tabindex="9"
+              :class="[
+                pageRoute.includes('repositories') && pageRoute.includes('asc') ? 'filterClass' : '',
+                'filter-option',
+              ]"
+              @click="sortByLeastRepos"
+              >Least repositories</span
+            >
           </div>
           <!-- <p>&nbsp;</p> -->
         </div>
@@ -230,6 +314,7 @@ export default {
       message: "",
       filterTerm: "",
       filterOrder: "",
+      pageName: "users",
 
       // searchFilters: [
       //   {
@@ -369,36 +454,71 @@ export default {
       }
     },
 
+    async queryRepo() {
+      this.queryTerm = this.$route.query.name;
+      this.page = this.$route.query.page;
+      this.filterTerm = this.$route.query.sortWith;
+      this.filterOrder = this.$route.query.orderBy;
+      this.pageName = 'repositories';
+      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+    },
+
+    async queryCommit() {
+      this.queryTerm = this.$route.query.name;
+      this.page = this.$route.query.page;
+      this.filterTerm = this.$route.query.sortWith;
+      this.filterOrder = this.$route.query.orderBy;
+      this.pageName = 'commits';
+      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+    },
+
+    async queryIssue() {
+      this.queryTerm = this.$route.query.name;
+      this.page = this.$route.query.page;
+      this.filterTerm = this.$route.query.sortWith;
+      this.filterOrder = this.$route.query.orderBy;
+      this.pageName = 'issues';
+      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+      // "issue_search_url": "https://api.github.com/search/issues?q={query}{&page,per_page,sort,order}",
+      // "user_search_url": "https://api.github.com/search/users?q={query}{&page,per_page,sort,order}"
+      // "issues_url": "https://api.github.com/issues",
+      // "user_url": "https://api.github.com/users/{user}",
+      // "commit_search_url": "https://api.github.com/search/commits?q={query}{&page,per_page,sort,order}",
+    },
+
+    async queryPackage() {
+      this.showWarning('Coming soon');
+    },
+
     async sortByMostFollowers() {
-      this.filterTerm = "followers";
-      this.filterOrder = "desc";
       this.queryTerm = this.$route.query.name;
       this.currentPage = this.$route.query.page;
-      // await this.queryUser(this.queryTerm, this.currentPage, this.filterTerm, this.filterOrder);
+      this.filterTerm = "followers";
+      this.filterOrder = "desc";
       await this.requeryUser();
     },
 
     async sortByMostRepos() {
-      this.filterTerm = "repositories";
-      this.filterOrder = "desc";
       this.queryTerm = this.$route.query.name;
       this.currentPage = this.$route.query.page;
+      this.filterTerm = "repositories";
+      this.filterOrder = "desc";
       await this.requeryUser();
     },
 
     async sortByLeastFollowers() {
-      this.filterTerm = "followers";
-      this.filterOrder = "asc";
       this.queryTerm = this.$route.query.name;
       this.currentPage = this.$route.query.page;
+      this.filterTerm = "followers";
+      this.filterOrder = "asc";
       await this.requeryUser();
     },
 
     async sortByLeastRepos() {
-      this.filterTerm = "repositories";
-      this.filterOrder = "asc";
       this.queryTerm = this.$route.query.name;
       this.currentPage = this.$route.query.page;
+      this.filterTerm = "repositories";
+      this.filterOrder = "asc";
       await this.requeryUser();
     },
 
@@ -408,8 +528,8 @@ export default {
         query: {
           name: user,
           page: page,
-          s: sort,
-          o: order,
+          sortWith: sort,
+          orderBy: order,
         },
       });
     },
@@ -423,15 +543,15 @@ export default {
         await this.queryUser(
           this.$route.query.name,
           currentPage - 1,
-          this.$route.query.s,
-          this.$route.query.o
+          this.$route.query.sortWith,
+          this.$route.query.orderBy
         );
 
         this.changePage(
           this.$route.query.name,
           currentPage - 1,
-          this.$route.query.s,
-          this.$route.query.o
+          this.$route.query.sortWith,
+          this.$route.query.orderBy
         );
 
         this.stepBack = false;
@@ -450,15 +570,15 @@ export default {
         await this.queryUser(
           this.$route.query.name,
           currentPage + 1,
-          this.$route.query.s,
-          this.$route.query.o
+          this.$route.query.sortWith,
+          this.$route.query.orderBy
         );
 
         this.changePage(
           this.$route.query.name,
           currentPage + 1,
-          this.$route.query.s,
-          this.$route.query.o
+          this.$route.query.sortWith,
+          this.$route.query.orderBy
         );
 
         this.stepUp = false;
@@ -472,15 +592,15 @@ export default {
       await this.queryUser(
         this.$route.query.name,
         1,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
 
       this.changePage(
         this.$route.query.name,
         1,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
     },
 
@@ -488,15 +608,15 @@ export default {
       await this.queryUser(
         this.$route.query.name,
         this.numOfPages,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
 
       this.changePage(
         this.$route.query.name,
         this.numOfPages,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
     },
 
@@ -524,6 +644,14 @@ export default {
   computed: {
     ...mapState(["searchResult"]),
 
+    pageRoute() {
+      return [this.$route.query.sortWith, this.$route.query.orderBy];
+    },
+
+    pageFilter() {
+      return this.pageName;
+    },
+
     numOfPages() {
       return Math.round(this.totalCount / 10);
     },
@@ -547,8 +675,8 @@ export default {
       this.queryUser(
         this.$route.query.name,
         this.$route.query.page,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
     },
   },
@@ -601,8 +729,8 @@ export default {
       this.queryUser(
         this.$route.query.name,
         this.$route.query.page,
-        this.$route.query.s,
-        this.$route.query.o
+        this.$route.query.sortWith,
+        this.$route.query.orderBy
       );
     }
   },
@@ -944,30 +1072,36 @@ li:hover {
 }
 
 li:focus {
+  border: none;
+  outline: none;
+}
+
+.activeClass {
   background-color: #7272ff;
   color: white;
   font-weight: 600;
   outline: none;
 }
 
-li.users {
+/* li.users {
   background-color: #7272ff;
   color: white;
   font-weight: 600;
-}
+} */
 
-.radio-toolbar {
+.filter-toolbar {
   display: inline-block;
   margin: 10px;
 }
 
-.radio-toolbar input[type="radio"] {
+/* .radio-toolbar input[type="radio"] {
   opacity: 0;
   position: fixed;
   width: 0;
-}
+} */
 
-.radio-toolbar label {
+/* .radio-toolbar label { */
+.filter-option {
   display: inline-block;
   background-color: #e3e3e3;
   padding: 10px 20px;
@@ -979,7 +1113,8 @@ li.users {
   transition: all 1s;
 }
 
-.radio-toolbar label:hover {
+/* .radio-toolbar label:hover { */
+.filter-option:hover {
   background-color: #f3f3f3;
   border: 2px dashed #7272ff;
   color: #7272ff;
@@ -989,7 +1124,10 @@ li.users {
     border: 2px dashed red;
   } */
 
-.radio-toolbar input[type="radio"]:checked + label {
+/* .radio-toolbar input[type="radio"]:checked + label { */
+.filter-option:focus,
+.filterClass {
+  outline: none;
   background-color: #7272ff;
   border-color: transparent;
   color: white;
