@@ -101,7 +101,7 @@
             <span
               tabindex="6"
               :class="[
-                pageRoute.includes('followers') && pageRoute.includes('desc')
+              pageRoute.every(i => ['followers', 'desc'].includes(i))
                   ? 'filterClass'
                   : '',
                 'filter-option',
@@ -122,7 +122,7 @@
             <span
               tabindex="7"
               :class="[
-                pageRoute.includes('repositories') && pageRoute.includes('desc')
+                pageRoute.every(i => ['repositories', 'desc'].includes(i))
                   ? 'filterClass'
                   : '',
                 'filter-option',
@@ -141,7 +141,7 @@
             <label for="radioLeastFollowers"> Least followers </label> -->
             <span
               tabindex="8"
-              :class="[pageRoute.includes('followers') && pageRoute.includes('asc') ? 'filterClass' : '', 'filter-option']"
+              :class="[pageRoute.every(i => ['followers', 'asc'].includes(i)) ? 'filterClass' : '', 'filter-option']"
               @click="sortByLeastFollowers"
               >Least followers</span
             >
@@ -157,7 +157,7 @@
             <span
               tabindex="9"
               :class="[
-                pageRoute.includes('repositories') && pageRoute.includes('asc') ? 'filterClass' : '',
+                pageRoute.every(i => ['repositories', 'asc'].includes(i)) ? 'filterClass' : '',
                 'filter-option',
               ]"
               @click="sortByLeastRepos"
@@ -223,7 +223,7 @@
           </button>
         </div>
 
-        <div class="query-result">
+        <div class="query-result" v-if="pageName === 'users'">
           <div
             class="card-layers"
             v-for="(item, index) in searchResult"
@@ -261,6 +261,69 @@
                     <div class="repos">
                       <span class="value">
                         {{ item.public_repos || "No" }}
+                      </span>
+                      <img
+                        src="../assets/fonts/remixicon/book-2-line.svg"
+                        alt="Repo Icon"
+                        width="16"
+                        height="16"
+                      />
+                      <span class="name"> Repos </span>
+                    </div>
+                  </div>
+
+                  <a
+                    :href="item.html_url | replaceEmpty('Profile URL')"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class=""
+                  >
+                    <button>Open</button>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="query-result" v-if="pageName !== 'users'">
+          <div
+            class="card-layers"
+            v-for="(item, index) in searchResult"
+            :key="index"
+          >
+            <div class="card">
+              <div class="img-wrap">
+                <img
+                  :src="item.owner.avatar_url | replaceEmpty('Image URL')"
+                  :alt="item.name | replaceEmpty('Image ALT')"
+                />
+              </div>
+              <div class="mini-details">
+                <h2>{{ item.name | truncateName() }}</h2>
+                <p class="title">
+                  {{ item.language | replaceEmpty("Language") }}
+                </p>
+                <div class="classified-details">
+                  <p class="description">
+                    {{ item.description | truncateBio }}
+                  </p>
+                  <p class="id">{{ item.license | replaceEmpty("License") }}</p>
+
+                  <div class="extra-details">
+                    <div class="followers">
+                      <span class="value"> {{ item.forks_count || "No" }} </span>
+                      <img
+                        src="../assets/fonts/remixicon/group-line.svg"
+                        alt="Followers Icon"
+                        width="16"
+                        height="16"
+                      />
+                      <span class="name"> Followers </span>
+                    </div>
+                    <div class="repos">
+                      <span class="value">
+                        {{ item.open_issues_count || "No" }}
                       </span>
                       <img
                         src="../assets/fonts/remixicon/book-2-line.svg"
@@ -426,18 +489,13 @@ export default {
           }
         } catch (e) {
           this.showWarning("Error fetching data. Please try again.");
-          // console.log(e);
+          console.log(e);
           this.searchStatus = "Search";
         }
         return;
       }
 
-      // else if (this.$route.query.name === "") {
-      //   this.showWarning("A valid name is required to start a search.");
-      // }
-
       this.showWarning("A valid name is required to start a search.");
-      // alert(this.$route.query.name)
     },
 
     async requeryUser() {
@@ -454,13 +512,50 @@ export default {
       }
     },
 
-    async queryRepo() {
-      this.queryTerm = this.$route.query.name;
-      this.page = this.$route.query.page;
-      this.filterTerm = this.$route.query.sortWith;
-      this.filterOrder = this.$route.query.orderBy;
-      this.pageName = 'repositories';
-      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+    async queryRepo(name, page, sort, order) {
+      // const searchTerm = name;
+      this.$route.query.name = name;
+
+      if (name) {
+        this.searchStatus = "Searching";
+        this.filterTerm = sort;
+        this.filterOrder = order;
+        this.pageName = 'repositories';
+
+        try {
+          let response = await apiRequest.get(
+            `/search/${this.pageName}?q=${name}&per_page=10&page=${page}&sort=${sort}&order=${order}`
+          );
+
+          if ([200, 201].includes(response.status)) {
+            let items = response.data.items;
+
+            if (items.length === 0) {
+              this.showWarning(`Zero (0) results found for ${name}.`);
+              this.searchStatus = "Search";
+              return;
+            }
+
+            this.totalCount = response.data.total_count;
+            await this.$store.dispatch("updateSearchResult", response.data);
+            console.log(response.data)
+            this.searchStatus = "Search";
+          }
+        } catch (e) {
+          this.showWarning("Error fetching data. Please try again.");
+          console.log(e);
+          this.searchStatus = "Search";
+        }
+        return;
+      }
+
+      this.showWarning("A valid name is required to start a search.");
+      // this.queryTerm = this.$route.query.name;
+      // this.page = this.$route.query.page;
+      // this.filterTerm = this.$route.query.sortWith;
+      // this.filterOrder = this.$route.query.orderBy;
+      // this.pageName = 'repositories';
+      // await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
     },
 
     async queryCommit() {
@@ -469,7 +564,7 @@ export default {
       this.filterTerm = this.$route.query.sortWith;
       this.filterOrder = this.$route.query.orderBy;
       this.pageName = 'commits';
-      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+      await this.queryRepo(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
     },
 
     async queryIssue() {
@@ -478,12 +573,10 @@ export default {
       this.filterTerm = this.$route.query.sortWith;
       this.filterOrder = this.$route.query.orderBy;
       this.pageName = 'issues';
-      await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
+      await this.queryRepo(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
       // "issue_search_url": "https://api.github.com/search/issues?q={query}{&page,per_page,sort,order}",
-      // "user_search_url": "https://api.github.com/search/users?q={query}{&page,per_page,sort,order}"
-      // "issues_url": "https://api.github.com/issues",
-      // "user_url": "https://api.github.com/users/{user}",
       // "commit_search_url": "https://api.github.com/search/commits?q={query}{&page,per_page,sort,order}",
+      // "repository_search_url": "https://api.github.com/search/repositories?q={query}{&page,per_page,sort,order}",
     },
 
     async queryPackage() {
