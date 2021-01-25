@@ -34,7 +34,14 @@
         <div class="filter-group">Filter Group</div>
         <div class="categories">
           <ul>
-            <!-- <li tabindex="0" :class="[pageFilter.includes('/users') ? activeClass : '', 'user-li']" @click="requeryUser">Users</li> -->
+            <!-- <li
+             v-for="(item, index) in categoryFilters" :key="index"
+              tabindex="index"
+              :class="[pageFilter === item.class ? 'activeClass' : '', 'user-li']"
+              @click="item.method"
+            >
+              {{ item.name }}
+            </li> -->
             <li
               tabindex="0"
               :class="[pageFilter === 'users' ? 'activeClass' : '', 'user-li']"
@@ -42,7 +49,7 @@
             >
               Users
             </li>
-            <li
+            <!-- <li
               tabindex="1"
               :class="[
                 pageFilter === 'repositories' ? 'activeClass' : '',
@@ -51,7 +58,7 @@
               @click="queryRepo"
             >
               Repositories
-            </li>
+            </li> -->
             <li
               tabindex="2"
               :class="[
@@ -87,17 +94,6 @@
         <div class="others">
           <div class="title">Filters</div>
           <div class="filter-toolbar">
-            <!-- <input
-              type="radio"
-              name="radio"
-              id="radioMostFollowers"
-              value="Most Followers"
-              class="firstcard"
-              @click="sortByMostFollowers"
-            />
-            <label for="radioMostFollowers"
-              class="firstcard"> Most followers </label> -->
-
             <span
               tabindex="6"
               :class="[
@@ -109,16 +105,7 @@
               @click="sortByMostFollowers"
               >Most Followers</span
             >
-            <!-- class="filter-option" -->
 
-            <!-- <input
-              type="radio"
-              name="radio"
-              id="radioMostRepos"
-              value="Most Repos"
-              @click="sortByMostRepos"
-            />
-            <label for="radioMostRepos"> Most repositories </label> -->
             <span
               tabindex="7"
               :class="[
@@ -131,14 +118,6 @@
               >Most repositories</span
             >
 
-            <!-- <input
-              type="radio"
-              name="radio"
-              id="radioLeastFollowers"
-              value="Least Followers"
-              @click="sortByLeastFollowers"
-            />
-            <label for="radioLeastFollowers"> Least followers </label> -->
             <span
               tabindex="8"
               :class="[pageRoute.every(i => ['followers', 'asc'].includes(i)) ? 'filterClass' : '', 'filter-option']"
@@ -146,14 +125,6 @@
               >Least followers</span
             >
 
-            <!-- <input
-              type="radio"
-              name="radio"
-              id="radioLeastRepos"
-              value="Least Repos"
-              @click="sortByLeastRepos"
-            />
-            <label for="radioLeastRepos"> Least repositories </label> -->
             <span
               tabindex="9"
               :class="[
@@ -164,7 +135,6 @@
               >Least repositories</span
             >
           </div>
-          <!-- <p>&nbsp;</p> -->
         </div>
       </div>
 
@@ -385,31 +355,30 @@ export default {
         {
           name: "Users",
           class: "users",
-          active: true,
+          method: 'requeryUser'
         },
         {
           name: "Repositories",
           class: "repositories",
-          active: false,
+          method: 'queryRepo'
         },
         {
           name: "Commits",
           class: "commits",
-          active: false,
+          method: 'queryCommit'
         },
         {
           name: "Issues",
           class: "issues",
-          active: false,
+          method: 'queryIssue'
         },
         {
           name: "Packages",
           class: "packages",
-          active: false,
+          method: 'queryPackage'
         },
       ],
-      // },
-      // {
+      
       otherFilters: [
         {
           id: "radioMostFollowers",
@@ -428,8 +397,6 @@ export default {
           value: "Least Repos",
         },
       ],
-      //   },
-      // ],
 
       filters: [],
     };
@@ -513,14 +480,14 @@ export default {
     },
 
     async queryRepo(name, page, sort, order) {
-      // const searchTerm = name;
       this.$route.query.name = name;
 
       if (name) {
         this.searchStatus = "Searching";
-        this.filterTerm = sort;
-        this.filterOrder = order;
         this.pageName = 'repositories';
+        this.$route.query.page = page;
+        this.$route.query.sortWith = sort;
+        this.$route.query.orderBy = order;
 
         try {
           let response = await apiRequest.get(
@@ -550,20 +517,14 @@ export default {
       }
 
       this.showWarning("A valid name is required to start a search.");
-      // this.queryTerm = this.$route.query.name;
-      // this.page = this.$route.query.page;
-      // this.filterTerm = this.$route.query.sortWith;
-      // this.filterOrder = this.$route.query.orderBy;
-      // this.pageName = 'repositories';
-      // await this.queryUser(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
     },
 
     async queryCommit() {
+      this.pageName = 'commits';
       this.queryTerm = this.$route.query.name;
       this.page = this.$route.query.page;
       this.filterTerm = this.$route.query.sortWith;
       this.filterOrder = this.$route.query.orderBy;
-      this.pageName = 'commits';
       await this.queryRepo(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
     },
 
@@ -574,9 +535,6 @@ export default {
       this.filterOrder = this.$route.query.orderBy;
       this.pageName = 'issues';
       await this.queryRepo(this.queryTerm, this.page, this.filterTerm, this.filterOrder);
-      // "issue_search_url": "https://api.github.com/search/issues?q={query}{&page,per_page,sort,order}",
-      // "commit_search_url": "https://api.github.com/search/commits?q={query}{&page,per_page,sort,order}",
-      // "repository_search_url": "https://api.github.com/search/repositories?q={query}{&page,per_page,sort,order}",
     },
 
     async queryPackage() {
@@ -941,19 +899,6 @@ a button:focus {
   outline: none;
 }
 
-/* .submit-search:hover img,
-  .submit-search:focus img {
-    color: white !important;
-    background-color: white;
-  } */
-
-/* input.submit-search::placeholder,
-  input.submit-search:-moz-placeholder,
-  input.submit-search:-ms-input-placeholder,
-  input.submit-search::-webkit-input-placeholder {
-    color: #7272FF;
-  } */
-
 .filters {
   position: -webkit-sticky;
   position: sticky;
@@ -968,14 +913,6 @@ a button:focus {
   user-select: none;
   cursor: default;
 }
-
-/* .filters .categories ul li {
-  cursor: grab;
-  user-select: none;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-} */
 
 .filter-group {
   display: inline-block;
@@ -1044,16 +981,18 @@ img.welcome-image {
 }
 
 .pagination button.previous {
+  /* margin-right: auto; */
   padding: 1px 10px 5px 5px;
 }
 
 .pagination button.next {
+  /* margin-left: auto; */
   padding: 1px 5px 5px 10px;
 }
 
 .pagination .page-progress {
   display: inline-block;
-  margin: 0 140px;
+  margin: 0 130px;
 }
 
 .pagination :nth-child(1),
@@ -1354,22 +1293,6 @@ li:focus {
   transition: all 0.5s;
 }
 
-/* img.mat {
-  width: 50%;
-  height: auto;
-  display: block;
-  margin: 4rem auto;
-  padding: 10%;
-  background-color: #A67B5B;
-  background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/4273/cardboard.jpg');
-  background-repeat: no-repeat;
-  background-size: cover;
-  border: 6px double #483C32;
-  box-shadow: 0 0 0 50px rgba(244, 240, 236, 0.4) inset, 0 0 0 11px rgb(180, 130, 90), 0 0 30px rgba(0, 0, 0, 0.8) inset;
-  outline: 2px solid #333;
-  outline-offset: 0px;
-} */
-
 .card:hover .img-wrap img {
   position: absolute;
   top: 0px;
@@ -1627,7 +1550,7 @@ li:focus {
 
   .pagination .page-progress {
     display: inline-block;
-    margin: 0 90px;
+    margin: 0 75px;
   }
 
   .pagination :nth-child(2),
@@ -1869,7 +1792,7 @@ li:focus {
 
   .pagination .page-progress {
     /* display: inline-block; */
-    margin: 0 20px;
+    margin: 0 12px;
   }
 
   .pagination :nth-child(2),
